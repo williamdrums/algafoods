@@ -1,13 +1,19 @@
 package com.wln.myrestaurantapi.domain.model;
 
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
 import javax.persistence.*;
 import java.math.BigDecimal;
-import java.util.Objects;
 
+
+@Data
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Entity
 public class Restaurante {
 
+    @EqualsAndHashCode.Include //só gera se for explicito em algum atributo, no caso o id
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -16,41 +22,4 @@ public class Restaurante {
     @Column(name = "taxa_frete")
     private BigDecimal taxa_Frete;
 
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-
-    public BigDecimal getTaxa_Frete() {
-        return taxa_Frete;
-    }
-
-    public void setTaxa_Frete(BigDecimal taxa_Frete) {
-        this.taxa_Frete = taxa_Frete;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Restaurante that = (Restaurante) o;
-        return Objects.equals(id, that.id);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
 }
