@@ -1,7 +1,10 @@
 package com.wln.myrestaurantapi.api.controller;
 
+import com.wln.myrestaurantapi.domain.exception.EntidadeEmUsoException;
+import com.wln.myrestaurantapi.domain.exception.EntidadeNaoEncontradaException;
 import com.wln.myrestaurantapi.domain.model.Cozinha;
 import com.wln.myrestaurantapi.domain.repository.CozinhaRepository;
+import com.wln.myrestaurantapi.domain.service.CadastroCozinhaService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -19,6 +22,9 @@ public class CozinhaController {
 
     @Autowired
     private CozinhaRepository cozinhaRepository;
+
+    @Autowired
+    private CadastroCozinhaService cadastroCozinha;
 
     @GetMapping
     public List<Cozinha> listar() {
@@ -41,7 +47,7 @@ public class CozinhaController {
     @ResponseStatus(HttpStatus.CREATED)
     public Cozinha adicionar(@RequestBody Cozinha cozinha) {
 
-        return cozinhaRepository.salvar(cozinha);
+        return cadastroCozinha.salvar(cozinha);
     }
 
     @PutMapping("/{cozinhaId}")
@@ -63,19 +69,17 @@ public class CozinhaController {
     public ResponseEntity<Cozinha> remover(@PathVariable Long cozinhaId) {
 
         try {
-            Cozinha cozinha = cozinhaRepository.buscarPorId(cozinhaId);
+            cadastroCozinha.excluir(cozinhaId);
 
-            if (cozinha != null) {
-                cozinhaRepository.remover(cozinha);
+            return ResponseEntity.noContent().build();
 
-                return ResponseEntity.noContent().build();
-            }
-
+        } catch (EntidadeNaoEncontradaException e) {
             return ResponseEntity.notFound().build();
-        } catch (DataIntegrityViolationException e) {
+
+
+        } catch (EntidadeEmUsoException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
-
 
     }
 }
