@@ -1,12 +1,13 @@
 package com.wln.myrestaurantapi.api.controller;
 
 
+import com.wln.myrestaurantapi.domain.exception.EntidadeEmUsoException;
 import com.wln.myrestaurantapi.domain.exception.EntidadeNaoEncontradaException;
-import com.wln.myrestaurantapi.domain.model.Cozinha;
 import com.wln.myrestaurantapi.domain.model.Restaurante;
 import com.wln.myrestaurantapi.domain.repository.CozinhaRepository;
 import com.wln.myrestaurantapi.domain.repository.RestauranteRepository;
 import com.wln.myrestaurantapi.domain.service.CadastroRestauranteService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -57,5 +58,37 @@ public class RestauranteController {
         }
 
 
+    }
+
+    @PutMapping("/{restauranteId}")
+    public ResponseEntity<Restaurante> atualizar(@PathVariable Long restauranteId, @RequestBody Restaurante restaurante) {
+
+        Restaurante restauranteAtual = restauranteRepository.buscarPorId(restauranteId);
+
+        if (restauranteAtual != null) {
+            //copia os dados de restaurante para restauranteAtual(id é a propriedade ignorada para não ser copiada)
+            BeanUtils.copyProperties(restaurante, restauranteAtual, "id");
+            cadastroRestaurante.salvar(restauranteAtual);
+
+            restauranteAtual = cadastroRestaurante.salvar(restauranteAtual);
+            return ResponseEntity.ok(restauranteAtual);
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    @DeleteMapping("/{restauranteId}")
+    public ResponseEntity<Restaurante> remover(@PathVariable Long restauranteId) {
+
+        try {
+            cadastroRestaurante.excluir(restauranteId);
+
+            return ResponseEntity.noContent().build();
+
+        } catch (EntidadeNaoEncontradaException e) {
+            return ResponseEntity.notFound().build();
+
+        } catch (EntidadeEmUsoException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
     }
 }

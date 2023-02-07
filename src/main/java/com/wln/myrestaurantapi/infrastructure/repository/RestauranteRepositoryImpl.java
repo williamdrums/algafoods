@@ -2,6 +2,7 @@ package com.wln.myrestaurantapi.infrastructure.repository;
 
 import com.wln.myrestaurantapi.domain.model.Restaurante;
 import com.wln.myrestaurantapi.domain.repository.RestauranteRepository;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Component;
 
 import javax.persistence.EntityManager;
@@ -34,9 +35,12 @@ public class RestauranteRepositoryImpl implements RestauranteRepository {
 
     @Transactional
     @Override
-    public void remover(Restaurante cozinha) {
-        cozinha = buscarPorId(cozinha.getId());
-        manager.remove(cozinha);
+    public void remover(Long restauranteId) {
+        Restaurante restaurante = buscarPorId(restauranteId);
 
+        if (restaurante == null) {
+            throw new EmptyResultDataAccessException(1);//1 é a quantidade que eu esperava que tivesse no objeto no caso uma restaurante
+        }
+        manager.remove(restaurante);
     }
 }
