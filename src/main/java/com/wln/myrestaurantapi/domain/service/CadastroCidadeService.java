@@ -3,36 +3,38 @@ package com.wln.myrestaurantapi.domain.service;
 
 import com.wln.myrestaurantapi.domain.exception.EntidadeEmUsoException;
 import com.wln.myrestaurantapi.domain.exception.EntidadeNaoEncontradaException;
-import com.wln.myrestaurantapi.domain.model.Cozinha;
-import com.wln.myrestaurantapi.domain.repository.CozinhaRepository;
+import com.wln.myrestaurantapi.domain.model.Cidade;
+import com.wln.myrestaurantapi.domain.repository.CidadeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 
 @Service
-public class CadastroCozinhaService {
+public class CadastroCidadeService {
 
     @Autowired
-    private CozinhaRepository cozinhaRepository;
+    private CidadeRepository cidadeRepository;
 
 
-    public Cozinha salvar(Cozinha cozinha) {
-        return cozinhaRepository.salvar(cozinha);
+    public Cidade salvar(Cidade cidade) {
+        return cidadeRepository.salvar(cidade);
     }
 
-    public void excluir(Long cozinhaId) {
+
+    public void excluir(Long cidadeId) {
+        Cidade cidade = cidadeRepository.buscarPorId(cidadeId);
 
         try {
-            cozinhaRepository.remover(cozinhaId);
+            cidadeRepository.remover(cidadeId);
 
         } catch (EmptyResultDataAccessException e) {
             throw new EntidadeNaoEncontradaException(
-                    String.format("Não existe um cadastro de cozinha com codigo %d ", cozinhaId));
+                    String.format("Não existe um cadastro de cidade com codigo %d ", cidadeId));
 
         } catch (DataIntegrityViolationException e) {
             throw new EntidadeEmUsoException(
-                    String.format("Cozinha de código %d não pode ser removida, pois está em uso", cozinhaId));
+                    String.format("Cidade de código %d não pode ser removida, pois está em uso", cidadeId));
         }
     }
 }

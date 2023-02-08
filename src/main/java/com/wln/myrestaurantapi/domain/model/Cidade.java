@@ -4,10 +4,7 @@ package com.wln.myrestaurantapi.domain.model;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 
 
 @Data
@@ -20,6 +17,12 @@ public class Cidade {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JoinColumn(nullable = false)
     private String nome;
+
+
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Estado estado;
 
 }
