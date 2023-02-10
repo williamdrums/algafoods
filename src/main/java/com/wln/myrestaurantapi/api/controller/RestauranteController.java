@@ -1,6 +1,7 @@
 package com.wln.myrestaurantapi.api.controller;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wln.myrestaurantapi.domain.exception.EntidadeEmUsoException;
 import com.wln.myrestaurantapi.domain.exception.EntidadeNaoEncontradaException;
 import com.wln.myrestaurantapi.domain.model.Restaurante;
@@ -11,9 +12,12 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/restaurantes")
@@ -77,7 +81,7 @@ public class RestauranteController {
     }
 
     @DeleteMapping("/{restauranteId}")
-    public ResponseEntity<Restaurante> remover(@PathVariable Long restauranteId) {
+    public ResponseEntity<?> remover(@PathVariable Long restauranteId) {
 
         try {
             cadastroRestaurante.excluir(restauranteId);
@@ -90,5 +94,35 @@ public class RestauranteController {
         } catch (EntidadeEmUsoException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
+    }
+
+    @PatchMapping("/{restauranteId}")
+    public ResponseEntity<?> atualizarParcial(@PathVariable Long restauranteId,
+                                              @RequestBody Map<String, Object> campos) {
+        Restaurante restauranteAtual = restauranteRepository.buscarPorId(restauranteId);
+
+        if (restauranteAtual == null) {
+            return ResponseEntity.notFound().build();
+        }
+        merge(campos, restauranteAtual);
+
+
+        return atualizar(restauranteId, restauranteAtual);
+    }
+
+    private void merge(Map<String, Object> dadosOrigem, Restaurante restauranteDestino) {
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        //cria um novo objeto do tipo da classe Restaurante
+        Restaurante restauranteOrigem = objectMapper.convertValue(dadosOrigem, Restaurante.class);
+
+        dadosOrigem.forEach((nomePropriedade, valorPropriedade) -> {
+            Field field = ReflectionUtils.findField(Restaurante.class, nomePropriedade);
+            field.setAccessible(true);//permite acessar um atributo privado de uma classe
+
+            Object novoValor = ReflectionUtils.getField(field,restauranteOrigem);
+
+            ReflectionUtils.setField(field, restauranteDestino, novoValor);
+        });
     }
 }
