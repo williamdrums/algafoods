@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/restaurantes")
@@ -28,23 +29,20 @@ public class RestauranteController {
     private RestauranteRepository restauranteRepository;
 
     @Autowired
-    private CozinhaRepository cozinhaRepository;
-
-    @Autowired
     private CadastroRestauranteService cadastroRestaurante;
 
     @GetMapping
     public List<Restaurante> listar() {
-        return restauranteRepository.listar();
+        return restauranteRepository.findAll();
     }
 
     @GetMapping("/{restauranteId}")
     public ResponseEntity<Restaurante> buscarPorId(@PathVariable Long restauranteId) {
 
-        Restaurante restaurante = restauranteRepository.buscarPorId(restauranteId);
+        Optional<Restaurante> restaurante = restauranteRepository.findById(restauranteId);
 
-        if (restaurante != null) {
-            return ResponseEntity.ok(restaurante);
+        if (restaurante.isPresent()) {
+            return ResponseEntity.ok(restaurante.get());
         }
         return ResponseEntity.notFound().build();
     }
@@ -67,15 +65,15 @@ public class RestauranteController {
     @PutMapping("/{restauranteId}")
     public ResponseEntity<Restaurante> atualizar(@PathVariable Long restauranteId, @RequestBody Restaurante restaurante) {
 
-        Restaurante restauranteAtual = restauranteRepository.buscarPorId(restauranteId);
+        Optional<Restaurante> restauranteAtual = restauranteRepository.findById(restauranteId);
 
         if (restauranteAtual != null) {
             //copia os dados de restaurante para restauranteAtual(id é a propriedade ignorada para não ser copiada)
-            BeanUtils.copyProperties(restaurante, restauranteAtual, "id");
-            cadastroRestaurante.salvar(restauranteAtual);
+            BeanUtils.copyProperties(restaurante, restauranteAtual.get(), "id");
+            cadastroRestaurante.salvar(restauranteAtual.get());
 
-            restauranteAtual = cadastroRestaurante.salvar(restauranteAtual);
-            return ResponseEntity.ok(restauranteAtual);
+            Restaurante restauranteCadastrado = cadastroRestaurante.salvar(restauranteAtual.get());
+            return ResponseEntity.ok(restauranteCadastrado);
         }
         return ResponseEntity.notFound().build();
     }
@@ -99,15 +97,15 @@ public class RestauranteController {
     @PatchMapping("/{restauranteId}")
     public ResponseEntity<?> atualizarParcial(@PathVariable Long restauranteId,
                                               @RequestBody Map<String, Object> campos) {
-        Restaurante restauranteAtual = restauranteRepository.buscarPorId(restauranteId);
+        Optional<Restaurante> restauranteAtual = restauranteRepository.findById(restauranteId);
 
-        if (restauranteAtual == null) {
+        if (restauranteAtual.isPresent()) {
             return ResponseEntity.notFound().build();
         }
-        merge(campos, restauranteAtual);
+        merge(campos, restauranteAtual.get());
 
 
-        return atualizar(restauranteId, restauranteAtual);
+        return atualizar(restauranteId, restauranteAtual.get());
     }
 
     private void merge(Map<String, Object> dadosOrigem, Restaurante restauranteDestino) {
@@ -120,7 +118,7 @@ public class RestauranteController {
             Field field = ReflectionUtils.findField(Restaurante.class, nomePropriedade);
             field.setAccessible(true);//permite acessar um atributo privado de uma classe
 
-            Object novoValor = ReflectionUtils.getField(field,restauranteOrigem);
+            Object novoValor = ReflectionUtils.getField(field, restauranteOrigem);
 
             ReflectionUtils.setField(field, restauranteDestino, novoValor);
         });

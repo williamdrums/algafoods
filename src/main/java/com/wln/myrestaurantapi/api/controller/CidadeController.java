@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/cidades")
@@ -28,17 +29,17 @@ public class CidadeController {
 
     @GetMapping
     public List<Cidade> listar() {
-        return cidadeRepository.listar();
+        return cidadeRepository.findAll();
     }
 
 
     @GetMapping("/{cidadeId}")
     public ResponseEntity<Cidade> buscarPorId(@PathVariable Long cidadeId) {
 
-        Cidade cidade = cidadeRepository.buscarPorId(cidadeId);
+        Optional<Cidade> cidade = cidadeRepository.findById(cidadeId);
 
-        if (cidade != null) {
-            return ResponseEntity.ok(cidade);
+        if (cidade.isPresent()) {
+            return ResponseEntity.ok(cidade.get());
         }
 
         return ResponseEntity.notFound().build();
@@ -54,15 +55,15 @@ public class CidadeController {
     @PutMapping("/{cidadeId}")
     public ResponseEntity<Cidade> atualizar(@PathVariable Long cidadeId, @RequestBody Cidade cidade) {
 
-        Cidade cidadeAtual = cidadeRepository.buscarPorId(cidadeId);
+        Optional<Cidade> cidadeAtual = cidadeRepository.findById(cidadeId);
 
 
-        if (cidadeAtual != null) {
+        if (cidadeAtual.isPresent()) {
             //copia os dados de cidade para cidadeAtual(id é a propriedade ignorada para não ser copiada)
-            BeanUtils.copyProperties(cidade, cidadeAtual, "id");
+            BeanUtils.copyProperties(cidade, cidadeAtual.get(), "id");
 
-            cidadeAtual = cadastroCidade.salvar(cidadeAtual);
-            return ResponseEntity.ok(cidadeAtual);
+            Cidade cidadeCadastrada = cadastroCidade.salvar(cidadeAtual.get());
+            return ResponseEntity.ok(cidadeCadastrada);
         }
 
         return ResponseEntity.notFound().build();
